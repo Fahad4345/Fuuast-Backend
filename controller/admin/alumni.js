@@ -132,7 +132,7 @@ export function useAlumni() {
       if (type === "pending") {
         const alumni = await Alumni.find({
           associationStatus: "pending",
-        }).populate("user");
+        });
         res
           .status(200)
           .json({ message: "Alumni association fetched successfully", alumni });
@@ -140,7 +140,7 @@ export function useAlumni() {
         console.log("approved");
         const alumni = await Alumni.find({
           associationStatus: "approved",
-        }).populate("user");
+        });
         res
           .status(200)
           .json({ message: "Alumni association fetched successfully", alumni });

@@ -125,6 +125,7 @@ export function TrainingWorkshops() {
           skills,
           timings,
           workmode,
+          lastDate,
         } = req.body;
         if (!userId) {
           return res.status(400).json({ message: "User ID is required" });
@@ -164,6 +165,7 @@ export function TrainingWorkshops() {
           skills,
           timings,
           workmode,
+          lastDateToApply: lastDate || null,
         };
         const post = new Post(payload);
         await post.save();
@@ -202,13 +204,26 @@ export function TrainingWorkshops() {
         res.status(200).json({ message: "Posts fetched successfully", posts });
       }
       if (PostType === "Job") {
-        const posts = await Post.find({ postCategory: PostType })
+        const today = new Date();
+
+        const posts = await Post.find({
+          postCategory: PostType,
+          $or: [
+            { lastDateToApply: null }, // no deadline
+            { lastDateToApply: { $gte: today } }, // deadline not crossed
+          ],
+        })
           .sort({
             createdAt: -1,
           })
           .populate("user", "name avatar role");
+
         console.log(posts);
-        res.status(200).json({ message: "Posts fetched successfully", posts });
+
+        res.status(200).json({
+          message: "Posts fetched successfully",
+          posts,
+        });
       }
     } catch (error) {
       res

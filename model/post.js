@@ -98,6 +98,8 @@ const postSchema = new mongoose.Schema(
       type: String,
       enum: ["On-site", "Remote", "Hybrid"],
     },
+
+    lastDateToApply: Date || null,
   },
   { timestamps: true },
 );

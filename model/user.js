@@ -83,6 +83,9 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
+  resume: {
+    type: String,
+  },
   education: {
     school: {
       type: String,
