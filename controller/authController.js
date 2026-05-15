@@ -38,7 +38,7 @@ class AuthController {
   login = async (req, res) => {
     const { email, password } = req.body;
     console.log(email, password);
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate("alumni");
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -65,17 +65,38 @@ class AuthController {
   register = async (req, res) => {
     const { name, email, password, reg_no, role } = req.body;
     console.log(name, email, password, reg_no, role);
-    const alumni = await Alumni.findOne({ reg_no });
-    // if (!alumni) {
-    //   return res.status(400).json({ error: 'Alumni not found' });
-    // }
-    const user = await User.findOne({ email });
-    if (user) {
-      return res.status(400).json({ error: "User already exists" });
-    }
-    const newUser = new User({ name, email, password, reg_no, role });
-    await newUser.save();
+    if (role === "Alumni") {
+      const alumni = await Alumni.findOne({ reg_no });
+      console.log("alumni", alumni);
+      if (!alumni) {
+        return res.status(400).json({ error: "Alumni not found" });
+      }
+      const user = await User.findOne({ email });
+      if (user) {
+        return res.status(400).json({ error: "User already exists" });
+      }
+      console.log("alumni", alumni);
 
+      const newUser = new User({
+        name,
+        email,
+        password,
+        reg_no,
+        role,
+        alumni: alumni._id,
+      });
+      await newUser.save();
+      await Alumni.findByIdAndUpdate(alumni._id, {
+        user: newUser._id,
+      });
+    } else {
+      const user = await User.findOne({ email });
+      if (user) {
+        return res.status(400).json({ error: "User already exists" });
+      }
+      const newUser = new User({ name, email, password, reg_no, role });
+      await newUser.save();
+    }
     res.status(201).json({ message: "User created successfully" });
   };
 

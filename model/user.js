@@ -3,6 +3,10 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema({
+  alumni: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Alumni",
+  },
   name: {
     type: String,
     required: true,
