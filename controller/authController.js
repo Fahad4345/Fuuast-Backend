@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import Alumni from "../model/alumni.js";
+import { uploadToCloudinary } from "../utils.js";
 dotenv.config();
 
 class AuthController {
@@ -139,6 +140,7 @@ class AuthController {
   };
   updateprofile = async (req, res) => {
     try {
+      console.log("req.files", req.files);
       const {
         name,
         headline,
@@ -182,6 +184,35 @@ class AuthController {
       res
         .status(500)
         .json({ error: "Failed to update profile", message: error.message });
+    }
+  };
+  uploadImages = async (req, res) => {
+    try {
+      const id = req.params.id;
+
+      let updateData = {};
+
+      if (req.files?.avatar?.length > 0) {
+        updateData.avatar = req.files.avatar[0].path;
+      }
+
+      if (req.files?.banner?.length > 0) {
+        updateData.banner = req.files.banner[0].path;
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(id, updateData, {
+        new: true,
+      });
+
+      return res.json({
+        success: true,
+        user: updatedUser,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        error: err.message || err,
+      });
     }
   };
 }

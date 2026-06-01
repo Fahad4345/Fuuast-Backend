@@ -6,18 +6,26 @@ import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../config/cloudinary.js";
 import User from "../model/user.js";
 import { uploadToCloudinary } from "../utils.js";
-import upload from "../middleware/upload.js";
+import { uploadImages, uploadResume } from "../middleware/upload.js";
 const router = Router();
 const authController = new AuthController();
 router.post("/signup", authController.register);
 router.post("/login", authController.login);
 router.post("/refresh", authController.refreshToken);
 router.post("/logout", authController.logout);
-router.put("/updateprofile/:id", Protected, authController.updateprofile);
+router.put(
+  "/uploadImages/:id",
+  uploadImages.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "banner", maxCount: 1 },
+  ]),
+  Protected,
+  authController.uploadImages,
+);
 router.post(
   "/uploadResume/:id",
   Protected,
-  upload.single("resume"),
+  uploadResume.single("resume"),
   async (req, res) => {
     try {
       console.log("Uploading Resume....");
@@ -54,7 +62,7 @@ router.post(
 router.put(
   "/updateResume/:id",
   Protected,
-  upload.single("resume"),
+  uploadResume.single("resume"),
   async (req, res) => {
     try {
       if (!req.file) {
