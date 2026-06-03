@@ -206,7 +206,6 @@ class AuthController {
   };
   updateprofile = async (req, res) => {
     try {
-      console.log("req.files", req.files);
       const {
         name,
         headline,
@@ -218,9 +217,7 @@ class AuthController {
         avatar,
         banner,
       } = req.body;
-      const id = req.user._id;
-      console.log(id, req.user._id);
-      console.log(avatar, banner);
+      const id = req.params.id;
       // Verify that the user is updating their own profile
 
       // Build update object, only including fields that are provided

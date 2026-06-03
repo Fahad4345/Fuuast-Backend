@@ -14,6 +14,7 @@ router.post("/login", authController.login);
 router.post("/refresh", authController.refreshToken);
 router.post("/requestAccess", authController.requestAccess);
 router.post("/logout", authController.logout);
+router.put("/updateProfile/:id", authController.updateprofile);
 router.put(
   "/uploadImages/:id",
   uploadImages.fields([
