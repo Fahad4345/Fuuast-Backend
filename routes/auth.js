@@ -12,6 +12,7 @@ const authController = new AuthController();
 router.post("/signup", authController.register);
 router.post("/login", authController.login);
 router.post("/refresh", authController.refreshToken);
+router.post("/requestAccess", authController.requestAccess);
 router.post("/logout", authController.logout);
 router.put(
   "/uploadImages/:id",

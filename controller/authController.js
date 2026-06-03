@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import Alumni from "../model/alumni.js";
 import { uploadToCloudinary } from "../utils.js";
+import SoftCompany from "../model/softcompany.js";
 dotenv.config();
 
 class AuthController {
@@ -40,10 +41,14 @@ class AuthController {
     const { email, password } = req.body;
     console.log(email, password);
     const user = await User.findOne({ email }).populate("alumni");
+    console.log("user", user);
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
+    console.log("user found, comparing password...", password, user.password);
+
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("isMatch", isMatch);
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
@@ -99,6 +104,67 @@ class AuthController {
       await newUser.save();
     }
     res.status(201).json({ message: "User created successfully" });
+  };
+  requestAccess = async (req, res) => {
+    const {
+      email,
+      role,
+      password,
+      companyName,
+      companyPhone,
+      companyRegNo,
+      companyLocation,
+      companyWebsite,
+      companyDescription,
+    } = req.body;
+    console.log(email, role);
+    if (role !== "Company") {
+      return res
+        .status(400)
+        .json({ error: "Only company  can request access" });
+    }
+    if (
+      !email ||
+      !password ||
+      !companyName ||
+      !companyPhone ||
+      !companyRegNo ||
+      !companyLocation ||
+      !companyWebsite ||
+      !companyDescription
+    ) {
+      return res
+        .status(400)
+        .json({ error: "All company details are required" });
+    }
+
+    const checkReg = await SoftCompany.findOne({
+      companyRegNo,
+    });
+    if (checkReg) {
+      return res.status(400).json({ error: "Company already exists" });
+    }
+    const checkEmail = await SoftCompany.findOne({
+      companyEmail: email,
+    });
+    if (checkEmail) {
+      return res.status(400).json({ error: "Company email already exists" });
+    }
+
+    const newUser = new SoftCompany({
+      companyEmail: email,
+      role,
+      password,
+      companyName,
+      companyPhone,
+      companyRegNo,
+      companyLocation,
+      companyWebsite,
+      companyDescription,
+      companyStatus: "pending",
+    });
+    await newUser.save();
+    res.status(201).json({ message: "Access request submitted successfully" });
   };
 
   refreshToken = async (req, res) => {

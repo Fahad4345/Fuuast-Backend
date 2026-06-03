@@ -9,14 +9,19 @@ const userSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    required: true,
+    required: function () {
+      return this.role !== "Company";
+    },
   },
   reg_no: {
     type: String,
-    required: true,
+    required: function () {
+      return this.role !== "Company";
+    },
   },
   role: {
     type: String,
+    enum: ["Alumni", "Company", "Admin", "Student"],
     required: true,
   },
   email: {
@@ -51,38 +56,46 @@ const userSchema = new mongoose.Schema({
   },
   skills: {
     type: [String],
-  },
-  experience: [
-    {
-      role: {
-        type: String,
-      },
-      company: {
-        type: String,
-      },
-      location: {
-        type: String,
-      },
-      type: {
-        type: String,
-      },
-      startDate: {
-        type: String,
-      },
-      endDate: {
-        type: String,
-      },
-      duration: {
-        type: String,
-      },
-      description: {
-        type: String,
-      },
-      logo: {
-        type: String,
-      },
+    required: function () {
+      return this.role !== "Company";
     },
-  ],
+  },
+  experience: {
+    type: [
+      {
+        role: {
+          type: String,
+        },
+        company: {
+          type: String,
+        },
+        location: {
+          type: String,
+        },
+        type: {
+          type: String,
+        },
+        startDate: {
+          type: String,
+        },
+        endDate: {
+          type: String,
+        },
+        duration: {
+          type: String,
+        },
+        description: {
+          type: String,
+        },
+        logo: {
+          type: String,
+        },
+      },
+    ],
+    required: function () {
+      return this.role !== "Company";
+    },
+  },
   resume: {
     type: String,
   },
