@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import Alumni from "../model/alumni.js";
 import { uploadToCloudinary } from "../utils.js";
 import SoftCompany from "../model/softcompany.js";
+import crypto from "crypto";
+import { sendEmail } from "./../nodemailer.js";
 dotenv.config();
 
 class AuthController {
@@ -203,6 +205,119 @@ class AuthController {
       console.error("Logout error:", err);
       return res.status(500).json({ error: "Failed to logout" });
     }
+  };
+  sendResetPassword = async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ message: "Email is required", success: false });
+      const user = await User.findOne({ email: email.toLowerCase() });
+      if (!user) return res.status(404).json({ error: "User with this gmail do not exist", success: false });
+      const token = crypto.randomBytes(32).toString("hex");
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+      user.resetPasswordToken = tokenHash;
+      user.resetPasswordExpires = Date.now() + 1000 * 60 * 60;
+      await user.save();
+
+      const resetUrl = `http://localhost:3000/resetPassword?token=${token}&id=${user._id}`;
+      await sendEmail({
+        to: user.email,
+        subject: "Reset Your Password",
+        html: `
+    <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+      <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; border: 1px solid #eaeaea;">
+
+        <h2 style="color: #08451c; margin-bottom: 20px;">
+          🔐 Password Reset Request
+        </h2>
+
+        <p style="font-size: 16px; color: #333;">
+          Hello,
+        </p>
+
+        <p style="font-size: 15px; color: #555; line-height: 1.6;">
+          We received a request to reset your password. If you made this request, click the button below to create a new password.
+        </p>
+
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="${resetUrl}"
+             style="background-color: #08451c; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">
+            Reset Password
+          </a>
+        </div>
+
+        <p style="font-size: 14px; color: #777; line-height: 1.6;">
+          This link will expire in <strong>1 hour</strong> for your security.
+        </p>
+
+        <p style="font-size: 14px; color: #777; line-height: 1.6;">
+          If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+
+        <p style="font-size: 12px; color: #aaa; text-align: center;">
+          If you're having trouble clicking the button, copy and paste this URL into your browser:
+        </p>
+
+        <p style="font-size: 12px; color: #aaa; word-break: break-all; text-align: center;">
+          ${resetUrl}
+        </p>
+
+        <p style="font-size: 12px; color: #aaa; text-align: center; margin-top: 20px;">
+          © ${new Date().getFullYear()} Your Company Name. All rights reserved.
+        </p>
+
+      </div>
+    </div>
+  `,
+      });
+      return res.json({
+        message: "Reset Password link sent successfully on your email.",
+        success: true
+      });
+    } catch (err) {
+      console.error("SendGrid error:", err);
+      return res.status(500).json({ error: "Failed to send reset password email", success: false });
+    }
+
+  };
+  resetPassword = async (req, res) => {
+    const { id, token, newPassword } = req.body;
+    if (!id || !token || !newPassword)
+      return res.status(400).json({ message: "Missing fields" });
+
+    const user = await User.findById(id);
+    if (!user || !user.resetPasswordToken || !user.resetPasswordExpires)
+      return res.status(400).json({ message: "Invalid or expired token" });
+
+    if (Date.now() > user.resetPasswordExpires)
+      return res.status(400).json({ message: "Token expired" });
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    if (tokenHash !== user.resetPasswordToken)
+      return res.status(400).json({ message: "Invalid token" });
+    if (user.role === "Company") {
+      const company = await SoftCompany.findByIdAndUpdate(id, { password: newPassword }, { new: true });
+      if (!company) return res.status(404).json({ error: "Company not found", success: false });
+      company.password = newPassword;
+
+      company.resetPasswordToken = undefined;
+      company.resetPasswordExpires = undefined;
+      await company.save();
+      user.password = newPassword;
+
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+
+    }
+    user.password = newPassword;
+
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    return res.json({ message: "Password updated successfully" });
   };
   updateprofile = async (req, res) => {
     try {
