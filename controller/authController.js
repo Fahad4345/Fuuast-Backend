@@ -79,6 +79,9 @@ class AuthController {
       if (!alumni) {
         return res.status(400).json({ error: "Alumni not found" });
       }
+      if (alumni.name !== name) {
+        return res.status(400).json({ error: "Alumni name does not match" });
+      }
       const user = await User.findOne({ email });
       if (user) {
         return res.status(400).json({ error: "User already exists" });
@@ -96,6 +99,7 @@ class AuthController {
       await newUser.save();
       await Alumni.findByIdAndUpdate(alumni._id, {
         user: newUser._id,
+        email: email,
       });
     } else {
       const user = await User.findOne({ email });

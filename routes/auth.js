@@ -8,15 +8,18 @@ import User from "../model/user.js";
 import { uploadToCloudinary } from "../utils.js";
 import { uploadImages, uploadResume } from "../middleware/upload.js";
 const router = Router();
+import useStudent from "../controller/student/student.js";
+const { applyJob } = useStudent();
 const authController = new AuthController();
 router.post("/signup", authController.register);
 router.post("/login", authController.login);
 router.post("/refresh", authController.refreshToken);
 router.post("/requestAccess", authController.requestAccess);
 router.post("/logout", authController.logout);
-router.post("/sendResetPassword",authController.sendResetPassword)
-router.post("/resetPassword",authController.resetPassword);
+router.post("/sendResetPassword", authController.sendResetPassword);
+router.post("/resetPassword", authController.resetPassword);
 router.put("/updateProfile/:id", authController.updateprofile);
+router.post("/applyJob/:id", Protected, applyJob);
 router.put(
   "/uploadImages/:id",
   uploadImages.fields([

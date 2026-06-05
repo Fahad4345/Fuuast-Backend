@@ -85,6 +85,7 @@ const postSchema = new mongoose.Schema(
       default: "Upcoming",
     },
     companyName: String,
+    companyEmail: String,
     jobtype: {
       type: String,
       enum: ["Full-time", "Part-time", "Contract", "Internship"],
@@ -100,7 +101,16 @@ const postSchema = new mongoose.Schema(
     },
 
     lastDateToApply: Date || null,
+    Applicants: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "User",
+      default: [],
+      required: function () {
+        return this.postCategory === "Job";
+      }
+    },
   },
+
   { timestamps: true },
 );
 

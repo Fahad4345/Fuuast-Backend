@@ -91,6 +91,11 @@ export function TrainingWorkshops() {
             .status(400)
             .json({ message: "Please fill all the fields" });
         }
+        console.log("file:", req.file?.path);
+        if (!req.file?.path) {
+          return res.status(400).json({ message: "Please upload an image" });
+        }
+
         const payload = {
           postCategory: PostType,
           title,
@@ -102,7 +107,7 @@ export function TrainingWorkshops() {
           eventMode,
           startTime,
           endTime,
-          image,
+          image: req.file?.path,
           status,
         };
         const post = new Post(payload);
@@ -117,6 +122,7 @@ export function TrainingWorkshops() {
           title,
           description,
           companyName,
+          companyEmail,
           jobtype,
           location,
           salary,
@@ -157,6 +163,7 @@ export function TrainingWorkshops() {
           title,
           description,
           companyName,
+          companyEmail,
           jobtype,
           location,
           salary,
@@ -324,6 +331,12 @@ export function TrainingWorkshops() {
             .status(400)
             .json({ message: "Please fill all the fields" });
         }
+        console.log("file:", req.file?.path);
+        if (!req.file?.path) {
+          return res.status(400).json({ message: "Please upload an image" });
+        }
+
+
         const payload = {
           title,
           postCategory: PostType,
@@ -335,7 +348,7 @@ export function TrainingWorkshops() {
           eventMode,
           startTime,
           endTime,
-          image,
+          image: req.file?.path,
           status,
         };
         const post = await Post.findByIdAndUpdate(id, payload, {

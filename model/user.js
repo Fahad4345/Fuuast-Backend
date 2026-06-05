@@ -102,29 +102,34 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
   education: {
-    school: {
-      type: String,
-    },
-    degree: {
-      type: String,
-    },
-    startDate: {
-      type: String,
-    },
-    endDate: {
-      type: String,
-    },
-    grade: {
-      type: String,
-    },
-    activities: {
-      type: String,
-    },
-    logo: {
-      type: String,
-    },
-  },
-});
+    type: [
+      {
+        school: {
+          type: String,
+        },
+        degree: {
+          type: String,
+        },
+        startDate: {
+          type: String,
+        },
+        endDate: {
+          type: String,
+        },
+        grade: {
+          type: String,
+        },
+        activities: {
+          type: String,
+        },
+        logo: {
+          type: String,
+        },
+      },
+    ],
+  }
+}
+);
 
 // Hash password before saving
 userSchema.pre("save", async function () {

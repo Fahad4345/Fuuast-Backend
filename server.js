@@ -6,6 +6,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin/training-workshops.js";
 import softCompanyRoutes from "./routes/softCompany.js";
+import studentRoutes from "./routes/student.js";
 dotenv.config();
 connectDB();
 
@@ -25,7 +26,7 @@ app.use(cookieParser());
 
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
-
+app.use("/student", studentRoutes);
 app.use("/softCompany", softCompanyRoutes);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

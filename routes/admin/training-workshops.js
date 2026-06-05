@@ -3,6 +3,7 @@ import { TrainingWorkshops } from "../../controller/admin/post.js";
 import { Protected } from "../../middleware/protected.js";
 import { useAlumni } from "../../controller/admin/alumni.js";
 import useCompany from "../../controller/admin/company.js";
+import { uploadImages } from "../../middleware/upload.js"
 const router = Router();
 const { createPost, getPosts, deletePost, updatePost } = TrainingWorkshops();
 const {
@@ -15,11 +16,24 @@ const {
   getAlumniAssociation,
 } = useAlumni();
 const { getSoftCompany, updateCompanyStatus } = useCompany();
+const conditionalUpload = (req, res, next) => {
+  if (req.params.type === "event") {
+    uploadImages.single("image")(req, res, next);
+  } else {
+    next();
+  }
+};
 
-router.post("/createPost/:type", Protected, createPost);
+
+router.post(
+  "/createPost/:type",
+  Protected,
+  conditionalUpload,
+  createPost
+);
 router.get("/getPosts/:type", getPosts);
 
-router.put("/updatePost/:id/:type", Protected, updatePost);
+router.put("/updatePost/:id/:type", conditionalUpload, Protected, updatePost);
 router.delete("/deletePost/:id", Protected, deletePost);
 router.put("/updateCompanyStatus/:id/:status", Protected, updateCompanyStatus);
 router.get("/getsoftCompany/:type", Protected, getSoftCompany);

@@ -1,15 +1,16 @@
 // create a controller for the admin to create a new alumni
 import Alumni from "../../model/alumni.js";
+import { sendEmail } from "../../nodemailer.js";
 export function useAlumni() {
   const createAlumni = async (req, res) => {
     try {
       console.log("createAlumni", req.body);
-      const { reg_no, batch, name, email, phone, company } = req.body;
+      const { reg_no, batch, name, phone, company } = req.body;
       const alumni = new Alumni({
         reg_no,
+        email: "",
         batch,
         name,
-        email,
         phone,
         company,
         user: null,
@@ -115,7 +116,8 @@ export function useAlumni() {
     try {
       const { id } = req.params;
       const { status } = req.body;
-      await Alumni.findByIdAndUpdate(id, { associationStatus: status });
+      const alumni = await Alumni.findByIdAndUpdate(id, { associationStatus: status }, { new: true });
+
       res
         .status(200)
         .json({ message: "Alumni association status changed successfully" });
@@ -132,7 +134,7 @@ export function useAlumni() {
       if (type === "pending") {
         const alumni = await Alumni.find({
           associationStatus: "pending",
-        });
+        }).populate("user");
         res
           .status(200)
           .json({ message: "Alumni association fetched successfully", alumni });
@@ -140,7 +142,7 @@ export function useAlumni() {
         console.log("approved");
         const alumni = await Alumni.find({
           associationStatus: "approved",
-        });
+        }).populate("user");
         res
           .status(200)
           .json({ message: "Alumni association fetched successfully", alumni });

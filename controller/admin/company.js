@@ -195,6 +195,17 @@ export default function useCompany() {
         .json({ message: "Failed to get jobs", error: error.message });
     }
   };
-
-  return { getSoftCompany, updateCompanyStatus, getMyJobs };
+  const getApplicants = async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const job = await post.findById(jobId).populate("Applicants");
+      if (!job) {
+        return res.status(404).json({ message: "Job Not Found" });
+      }
+      res.status(200).json({ message: "Applicants fetched successfully", applicants: job.Applicants });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get applicants", error: error.message });
+    }
+  }
+  return { getSoftCompany, updateCompanyStatus, getMyJobs, getApplicants };
 }
