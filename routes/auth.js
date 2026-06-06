@@ -35,10 +35,7 @@ router.post(
   uploadResume.single("resume"),
   async (req, res) => {
     try {
-      console.log("Uploading Resume....");
-
       const id = req.params.id;
-      console.log(id);
       if (!req.file) {
         return res.status(400).json({
           message: "No file uploaded",
