@@ -5,16 +5,13 @@ const POST_CATEGORIES = ["training", "event"];
 export function TrainingWorkshops() {
   const createPost = async (req, res) => {
     try {
-      console.log("Creating Post....");
-      console.log(req.body);
       const PostType = req.params.type;
-      console.log(PostType);
       if (!PostType) {
         return res.status(400).json({ message: "Type is required" });
       }
       if (PostType === "training") {
         const {
-          userId,
+
           title,
           description,
           location,
@@ -24,9 +21,7 @@ export function TrainingWorkshops() {
           time,
           status,
         } = req.body;
-        // if (!userId) {
-        //   return res.status(400).json({ message: "User ID is required" });
-        // }
+
         if (
           !title ||
           !description ||
@@ -40,10 +35,7 @@ export function TrainingWorkshops() {
             .status(400)
             .json({ message: "Please fill all the fields" });
         }
-        // const user = await User.findById(userId);
-        // if (!user) {
-        //   return res.status(404).json({ message: "User not found" });
-        // }
+
         const payload = {
           postCategory: PostType,
           title,
@@ -91,7 +83,6 @@ export function TrainingWorkshops() {
             .status(400)
             .json({ message: "Please fill all the fields" });
         }
-        console.log("file:", req.file?.path);
         if (!req.file?.path) {
           return res.status(400).json({ message: "Please upload an image" });
         }
@@ -225,8 +216,6 @@ export function TrainingWorkshops() {
           })
           .populate("user", "name avatar role");
 
-        console.log(posts);
-
         res.status(200).json({
           message: "Posts fetched successfully",
           posts,
@@ -267,7 +256,6 @@ export function TrainingWorkshops() {
           time,
           status,
         } = req.body;
-        console.log(type);
         if (
           !title ||
           !description ||
@@ -331,10 +319,7 @@ export function TrainingWorkshops() {
             .status(400)
             .json({ message: "Please fill all the fields" });
         }
-        console.log("file:", req.file?.path);
-        if (!req.file?.path) {
-          return res.status(400).json({ message: "Please upload an image" });
-        }
+
 
 
         const payload = {

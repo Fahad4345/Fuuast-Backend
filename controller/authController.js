@@ -7,6 +7,7 @@ import { uploadToCloudinary } from "../utils.js";
 import SoftCompany from "../model/softcompany.js";
 import crypto from "crypto";
 import { sendEmail } from "./../nodemailer.js";
+import Student from "../model/student.js";
 dotenv.config();
 
 class AuthController {
@@ -41,16 +42,12 @@ class AuthController {
 
   login = async (req, res) => {
     const { email, password } = req.body;
-    console.log(email, password);
     const user = await User.findOne({ email }).populate("alumni");
-    console.log("user", user);
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-    console.log("user found, comparing password...", password, user.password);
 
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log("isMatch", isMatch);
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
@@ -72,21 +69,25 @@ class AuthController {
 
   register = async (req, res) => {
     const { name, email, password, reg_no, role } = req.body;
-    console.log(name, email, password, reg_no, role);
     if (role === "Alumni") {
       const alumni = await Alumni.findOne({ reg_no });
-      console.log("alumni", alumni);
       if (!alumni) {
         return res.status(400).json({ error: "Alumni not found" });
       }
       if (alumni.name !== name) {
         return res.status(400).json({ error: "Alumni name does not match" });
       }
+      if (alumni.user) {
+        return res.status(400).json({ error: "Account Already Exist" });
+      }
+      const isStudent = await Student.findOne({ reg_no });
+      if (isStudent) {
+        return res.status(400).json({ error: "Invalid Registration Number" });
+      }
       const user = await User.findOne({ email });
       if (user) {
         return res.status(400).json({ error: "User already exists" });
       }
-      console.log("alumni", alumni);
 
       const newUser = new User({
         name,
@@ -102,6 +103,21 @@ class AuthController {
         email: email,
       });
     } else {
+      const alumni = await Alumni.findOne({ reg_no })
+      if (alumni) {
+        return res.status(400).json({ error: "Invalid Registration Number" });
+      }
+      const student = await Student.findOne({ reg_no })
+      if (!student) {
+
+        return res.status(400).json({ error: "Invalid Registration Number" });
+      }
+      if (student.name !== name) {
+        return res.status(400).json({ error: "Invalid Name" });
+      }
+      if (student.user) {
+        return res.status(400).json({ error: "Account Already Exist" });
+      }
       const user = await User.findOne({ email });
       if (user) {
         return res.status(400).json({ error: "User already exists" });
@@ -123,7 +139,6 @@ class AuthController {
       companyWebsite,
       companyDescription,
     } = req.body;
-    console.log(email, role);
     if (role !== "Company") {
       return res
         .status(400)
@@ -175,7 +190,6 @@ class AuthController {
 
   refreshToken = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
-    console.log(refreshToken);
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
     const user = await User.findById(decoded.id);
     if (!user) {
@@ -187,7 +201,6 @@ class AuthController {
   logout = async (req, res) => {
     try {
       const token = req.cookies.refreshToken;
-      console.log(token);
       if (token) {
         try {
           const decoded = jwt.verify(token, process.env.REFRESH_SECRET);
@@ -198,7 +211,6 @@ class AuthController {
             await user.save();
           }
         } catch (err) {
-          console.log("Token already invalid or expired");
         }
       }
 

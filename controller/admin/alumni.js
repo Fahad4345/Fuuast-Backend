@@ -4,8 +4,13 @@ import { sendEmail } from "../../nodemailer.js";
 export function useAlumni() {
   const createAlumni = async (req, res) => {
     try {
-      console.log("createAlumni", req.body);
       const { reg_no, batch, name, phone, company } = req.body;
+      const alreadyAlumni = await Alumni.findOne({ reg_no });
+      if (alreadyAlumni) {
+        return res.status(400).json({
+          message: "Alumni with this registration number already exists",
+        });
+      }
       const alumni = new Alumni({
         reg_no,
         email: "",
@@ -25,7 +30,6 @@ export function useAlumni() {
   };
   const getAlumni = async (req, res) => {
     try {
-      console.log("getAlumni");
       const { type } = req.params;
       if (type === "all") {
         const alumni = await Alumni.find();
@@ -75,9 +79,9 @@ export function useAlumni() {
     try {
       const { id } = req.params;
       // Handle both regNo (camelCase) and reg_no (snake_case) from frontend
-      const { regNo, reg_no, batch, name, email, phone, company } = req.body;
+      const { reg_No, reg_no, batch, name, email, phone, company } = req.body;
       const updateData = {
-        regNo: regNo || reg_no, // Use whichever is provided
+        reg_no, // Use whichever is provided
         batch,
         name,
         email,
@@ -101,7 +105,6 @@ export function useAlumni() {
   const requestjoinAssociation = async (req, res) => {
     try {
       const { id } = req.params;
-      console.log("requestjoinAssociation", id);
       await Alumni.findByIdAndUpdate(id, { associationStatus: "pending" });
       res
         .status(200)
@@ -139,7 +142,6 @@ export function useAlumni() {
           .status(200)
           .json({ message: "Alumni association fetched successfully", alumni });
       } else if (type === "approved") {
-        console.log("approved");
         const alumni = await Alumni.find({
           associationStatus: "approved",
         }).populate("user");
