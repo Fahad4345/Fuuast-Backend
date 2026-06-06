@@ -8,7 +8,6 @@ import { sendEmail } from "./../../nodemailer.js";
 export default function useCompany() {
   const getSoftCompany = async (req, res) => {
     try {
-      console.log("getSoftCompany");
       const { type } = req.params;
       if (type === "all") {
         const companies = await SoftCompany.find({
@@ -49,7 +48,6 @@ export default function useCompany() {
     try {
       const { id, status } = req.params;
       const { rejectionReason } = req.body;
-      console.log("updateCompanyStatus", id, status, rejectionReason);
       const company = await SoftCompany.findByIdAndUpdate(
         id,
         { companyStatus: status },
@@ -58,12 +56,14 @@ export default function useCompany() {
       if (!company) {
         return res.status(404).json({ message: "Company not found" });
       }
+      console.log(company);
       if (status === "approved") {
         const user = new User({
           name: company.companyName,
           email: company.companyEmail,
           role: "Company",
           password: company.password,
+          company: company._id
         });
         await user.save();
         await sendEmail({
@@ -169,7 +169,6 @@ export default function useCompany() {
     </div>
   `,
         });
-        console.log("emailResponse", emailResponse);
         res.status(200).json({ message: "Company status updated successfully", company, emailResponse });
       }
     } catch (error) {
@@ -182,7 +181,14 @@ export default function useCompany() {
   const getMyJobs = async (req, res) => {
     try {
       const { Id } = req.params;
-      const jobs = await post.find({ user: Id });
+
+      const today = new Date();
+      const jobs = await post.find({
+        user: Id, $or: [
+          { lastDateToApply: null }, // no deadline
+          { lastDateToApply: { $gte: today } }, // deadline not crossed
+        ],
+      });
       if (!jobs) {
         return res
           .status(404)
@@ -207,5 +213,43 @@ export default function useCompany() {
       res.status(500).json({ message: "Failed to get applicants", error: error.message });
     }
   }
-  return { getSoftCompany, updateCompanyStatus, getMyJobs, getApplicants };
+  const updateCompanyProfile = async (req, res) => {
+    try {
+      const {
+        companyName,
+        companyPhone,
+        companyLocation,
+        companyWebsite,
+        companyDescription
+      } = req.body;
+      const id = req.params.Id;
+      // Verify that the user is updating their own profile
+
+      // Build update object, only including fields that are provided
+      console.log(id)
+      const updateData = {};
+      if (companyName !== undefined) updateData.companyName = companyName;
+      if (companyPhone !== undefined) updateData.companyPhone = companyPhone;
+      if (companyLocation !== undefined) updateData.companyLocation = companyLocation;
+      if (companyWebsite !== undefined) updateData.companyWebsite = companyWebsite;
+      if (companyDescription !== undefined) updateData.companyDescription = companyDescription;
+      console.log(id, updateData)
+      const company = await SoftCompany.findByIdAndUpdate(id, updateData, {
+        new: true,
+        runValidators: true,
+      });
+
+      if (!company) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.status(200).json({ message: "Profile updated successfully", company });
+    } catch (error) {
+      console.error("Profile update error:", error);
+      res
+        .status(500)
+        .json({ error: "Failed to update profile", message: error.message });
+    }
+  };
+  return { getSoftCompany, updateCompanyStatus, getMyJobs, getApplicants, updateCompanyProfile };
 }

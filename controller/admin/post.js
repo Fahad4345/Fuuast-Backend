@@ -108,6 +108,9 @@ export function TrainingWorkshops() {
           .json({ message: "Event post created successfully", post });
       }
       if (PostType === "Job") {
+
+        console.log(req.body);
+
         const {
           userId,
           title,
@@ -335,6 +338,41 @@ export function TrainingWorkshops() {
           endTime,
           image: req.file?.path,
           status,
+        };
+        const post = await Post.findByIdAndUpdate(id, payload, {
+          new: true,
+          runValidators: true,
+        });
+        if (!post) {
+          return res.status(404).json({ message: "Post not found" });
+        }
+        res.status(200).json({ message: "Post updated successfully", post });
+      }
+      if (PostType === "Job") {
+        const { id } = req.params;
+        const ispost = await Post.findById(id);
+        if (!ispost) {
+          return res.status(404).json({ message: "Post not found" });
+        }
+        const { title, description, companyName, companyEmail, jobtype, location, salary, experiencelevel, educationlevel, skills, timings, workmode, lastDate } = req.body;
+        if (!title || !description || !companyName || !jobtype || !location || !salary || !experiencelevel || !educationlevel || !skills || !timings || !workmode || !lastDate) {
+          return res.status(400).json({ message: "Please fill all the fields" });
+        }
+        const payload = {
+          title,
+          postCategory: PostType,
+          description,
+          companyName,
+          companyEmail,
+          jobtype,
+          location,
+          salary,
+          experiencelevel,
+          educationlevel,
+          skills,
+          timings,
+          workmode,
+          lastDateToApply: lastDate,
         };
         const post = await Post.findByIdAndUpdate(id, payload, {
           new: true,

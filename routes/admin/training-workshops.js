@@ -26,7 +26,7 @@ const conditionalUpload = (req, res, next) => {
   } else if (req.params.type === "training") {
     upload.any()(req, res, next);
   } else {
-    next();
+    return upload.none()(req, res, next);
   }
 };
 

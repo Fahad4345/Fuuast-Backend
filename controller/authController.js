@@ -46,6 +46,9 @@ class AuthController {
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
+    if (user.role === "Company") {
+      await user.populate("company");
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -74,6 +77,7 @@ class AuthController {
       if (!alumni) {
         return res.status(400).json({ error: "Alumni not found" });
       }
+      console.log(alumni.name, name);
       if (alumni.name !== name) {
         return res.status(400).json({ error: "Alumni name does not match" });
       }
@@ -337,42 +341,74 @@ class AuthController {
   };
   updateprofile = async (req, res) => {
     try {
-      const {
-        name,
-        headline,
-        location,
-        about,
-        skills,
-        experience,
-        education,
-        avatar,
-        banner,
-      } = req.body;
-      const id = req.params.id;
-      // Verify that the user is updating their own profile
+      const user = await User.findById({ _id: req.params.id })
+      console.log(user)
+      if (user.role === "Company") {
+        const {
+          name,
+          headline,
+          location,
+          about,
+          avatar,
+          banner,
+          phone,
+          website,
 
-      // Build update object, only including fields that are provided
-      const updateData = {};
-      if (name !== undefined) updateData.name = name;
-      if (headline !== undefined) updateData.headline = headline;
-      if (location !== undefined) updateData.location = location;
-      if (about !== undefined) updateData.about = about;
-      if (skills !== undefined) updateData.skills = skills;
-      if (experience !== undefined) updateData.experience = experience;
-      if (education !== undefined) updateData.education = education;
-      if (avatar !== undefined) updateData.avatar = avatar;
-      if (banner !== undefined) updateData.banner = banner;
+        } = req.body;
+        const id = req.params.id;
+        if (user.company) {
+          await User.findByIdAndUpdate(id, { name, headline, location, about, avatar, banner }, {
+            new: true, runValidators: true
+          })
+          await SoftCompany.findByIdAndUpdate(user.company, { companyName: name, companyDescription: about, companyPhone: phone, companyWebsite: website, companyLocation: location }, {
+            new: true, runValidators: true
+          })
+          const fetchuser = await User.findById(id).populate("company")
 
-      const user = await User.findByIdAndUpdate(id, updateData, {
-        new: true,
-        runValidators: true,
-      });
 
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
+          res.status(200).json({ message: "Profile updated successfully", fetchuser, });
+
+        }
       }
+      else {
 
-      res.status(200).json({ message: "Profile updated successfully", user });
+
+
+        const {
+          name,
+          headline,
+          location,
+          about,
+          skills,
+          experience,
+          education,
+          avatar,
+          banner,
+        } = req.body;
+        const id = req.params.id;
+
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (headline !== undefined) updateData.headline = headline;
+        if (location !== undefined) updateData.location = location;
+        if (about !== undefined) updateData.about = about;
+        if (skills !== undefined) updateData.skills = skills;
+        if (experience !== undefined) updateData.experience = experience;
+        if (education !== undefined) updateData.education = education;
+        if (avatar !== undefined) updateData.avatar = avatar;
+        if (banner !== undefined) updateData.banner = banner;
+
+        const updateduser = await User.findByIdAndUpdate(id, updateData, {
+          new: true,
+          runValidators: true,
+        });
+
+        if (!updateduser) {
+          return res.status(404).json({ error: "User not found" });
+        }
+
+        res.status(200).json({ message: "Profile updated successfully", updateduser });
+      }
     } catch (error) {
       console.error("Profile update error:", error);
       res
