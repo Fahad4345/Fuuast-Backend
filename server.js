@@ -16,7 +16,7 @@ const app = express();
 app.use(express.json());
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://fuuast-xi.vercel.app/"
+  "https://fuuast-xi.vercel.app"
 ];
 
 app.use(
