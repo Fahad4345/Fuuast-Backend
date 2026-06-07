@@ -151,6 +151,19 @@ export function TrainingWorkshops() {
         if (!user) {
           return res.status(404).json({ message: "User not found" });
         }
+        let skls = req.body.skills;
+
+        if (typeof skls === "string") {
+          try {
+            skls = JSON.parse(skls);
+          } catch (err) {
+            skls = []; // ✅ FIXED (use skls, not skills)
+          }
+        }
+
+        if (!Array.isArray(skls)) {
+          skls = [];
+        }
         const payload = {
           user,
           postCategory: PostType,
@@ -163,7 +176,7 @@ export function TrainingWorkshops() {
           salary,
           experiencelevel,
           educationlevel,
-          skills,
+          skills: skls,
           timings,
           workmode,
           lastDateToApply: lastDate || null,
@@ -358,6 +371,19 @@ export function TrainingWorkshops() {
         if (!title || !description || !companyName || !jobtype || !location || !salary || !experiencelevel || !educationlevel || !skills || !timings || !workmode || !lastDate) {
           return res.status(400).json({ message: "Please fill all the fields" });
         }
+        let skls = skills;
+
+        if (typeof skls === "string") {
+          try {
+            skls = JSON.parse(skls);
+          } catch (err) {
+            skls = []; // ✅ FIXED (use skls, not skills)
+          }
+        }
+
+        if (!Array.isArray(skls)) {
+          skls = [];
+        }
         const payload = {
           title,
           postCategory: PostType,
@@ -369,7 +395,7 @@ export function TrainingWorkshops() {
           salary,
           experiencelevel,
           educationlevel,
-          skills,
+          skills: skls,
           timings,
           workmode,
           lastDateToApply: lastDate,
